@@ -1,0 +1,17 @@
+# Planejamento local: spec, mapa, tickets, pesquisa e protótipos
+.scratch/
+
+# Documentação de domínio, decisões e instruções locais para agentes
+docs/
+GLOSSARY.md
+AGENTS.md
+CLAUDE.md
+
+# Dependências e artefatos de build
+node_modules/
+out/
+dist/
+release/
+coverage/
+*.log
+.DS_Store

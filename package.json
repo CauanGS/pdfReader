@@ -1,0 +1,46 @@
+{
+  "name": "pdf-reader",
+  "version": "0.1.0",
+  "description": "Leitor de PDF desktop local-first com modo escuro, retomada de leitura, marcadores ancorados em palavras e tradução com sidebar.",
+  "main": "./out/main/index.js",
+  "author": "Cauan",
+  "license": "MIT",
+  "scripts": {
+    "dev": "electron-vite dev",
+    "build": "electron-vite build",
+    "start": "electron-vite preview",
+    "package:win": "electron-vite build && electron-builder --win portable --x64",
+    "typecheck": "tsc --noEmit -p tsconfig.node.json && tsc --noEmit -p tsconfig.web.json"
+  },
+  "build": {
+    "appId": "com.cauan.pdfreader",
+    "productName": "Leitor de PDF",
+    "directories": {
+      "output": "release"
+    },
+    "files": ["out/**"],
+    "extraResources": [
+      {
+        "from": "resources/dictionaries",
+        "to": "dictionaries"
+      }
+    ],
+    "win": {
+      "target": ["portable"]
+    }
+  },
+  "devDependencies": {
+    "@types/node": "^24.0.0",
+    "@types/react": "^19.3.0",
+    "@types/react-dom": "^19.3.0",
+    "@vitejs/plugin-react": "^6.1.2",
+    "electron": "^44.9.2",
+    "electron-builder": "^26.0.12",
+    "electron-vite": "^6.0.0",
+    "pdfjs-dist": "^6.4.299",
+    "react": "^19.3.1",
+    "react-dom": "^19.3.1",
+    "typescript": "^5.9.3",
+    "vite": "^8.3.4"
+  }
+}
