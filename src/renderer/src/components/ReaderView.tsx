@@ -480,6 +480,8 @@ export function ReaderView({
                   scale={scale}
                   darkMode={settings.darkMode}
                   darkPreset={settings.darkPreset}
+                  pageBgColor={settings.pageBgColor}
+                  pageTextColor={settings.pageTextColor}
                   translationMode={translationMode}
                   registerRef={registerPageRef}
                   onTranslateSelection={(info) => void handleTranslateSelection(info)}

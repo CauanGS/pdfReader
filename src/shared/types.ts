@@ -48,6 +48,8 @@ export interface PublicSettings {
   targetLanguage: string
   darkMode: boolean
   darkPreset: 'soft' | 'contrast'
+  pageBgColor: string | null
+  pageTextColor: string | null
   hasGoogleApiKey: boolean
 }
 
@@ -57,6 +59,8 @@ export interface SettingsUpdate {
   targetLanguage?: string
   darkMode?: boolean
   darkPreset?: 'soft' | 'contrast'
+  pageBgColor?: string
+  pageTextColor?: string
   googleApiKey?: string
 }
 

@@ -29,6 +29,11 @@ function deleteSetting(key: string): void {
   getDb().prepare('DELETE FROM settings WHERE key = ?').run(key)
 }
 
+function readColor(key: string): string | null {
+  const value = readSetting(key)
+  return value && value.trim() ? value.trim() : null
+}
+
 export function saveGoogleApiKey(apiKey: string): void {
   if (!apiKey) {
     deleteSetting('google_api_key_enc')
@@ -64,6 +69,8 @@ export function getPublicSettings(): PublicSettings {
     targetLanguage: readSetting('target_language') ?? DEFAULT_SETTINGS.targetLanguage,
     darkMode: (readSetting('dark_mode') ?? String(DEFAULT_SETTINGS.darkMode)) === 'true',
     darkPreset,
+    pageBgColor: readColor('page_bg_color'),
+    pageTextColor: readColor('page_text_color'),
     hasGoogleApiKey: Boolean(readGoogleApiKey())
   }
 }
@@ -74,6 +81,16 @@ export function updateSettings(update: SettingsUpdate): PublicSettings {
   if (update.targetLanguage) writeSetting('target_language', update.targetLanguage)
   if (typeof update.darkMode === 'boolean') writeSetting('dark_mode', String(update.darkMode))
   if (update.darkPreset) writeSetting('dark_preset', update.darkPreset)
+  if (typeof update.pageBgColor === 'string') {
+    const value = update.pageBgColor.trim()
+    if (value) writeSetting('page_bg_color', value)
+    else deleteSetting('page_bg_color')
+  }
+  if (typeof update.pageTextColor === 'string') {
+    const value = update.pageTextColor.trim()
+    if (value) writeSetting('page_text_color', value)
+    else deleteSetting('page_text_color')
+  }
   if (typeof update.googleApiKey === 'string') saveGoogleApiKey(update.googleApiKey.trim())
   return getPublicSettings()
 }

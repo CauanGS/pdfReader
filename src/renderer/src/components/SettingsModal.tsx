@@ -12,6 +12,10 @@ export function SettingsModal({ settings, onClose, onSave }: SettingsModalProps)
   const [targetLanguage, setTargetLanguage] = useState(settings.targetLanguage)
   const [darkMode, setDarkMode] = useState(settings.darkMode)
   const [darkPreset, setDarkPreset] = useState(settings.darkPreset)
+  const [textColorEnabled, setTextColorEnabled] = useState(settings.pageTextColor != null)
+  const [textColor, setTextColor] = useState(settings.pageTextColor ?? '#0c0c0c')
+  const [bgColorEnabled, setBgColorEnabled] = useState(settings.pageBgColor != null)
+  const [bgColor, setBgColor] = useState(settings.pageBgColor ?? '#ffffff')
   const [apiKey, setApiKey] = useState('')
   const [removeKey, setRemoveKey] = useState(false)
   const [saving, setSaving] = useState(false)
@@ -23,7 +27,9 @@ export function SettingsModal({ settings, onClose, onSave }: SettingsModalProps)
         provider,
         targetLanguage: targetLanguage.trim() || 'pt-BR',
         darkMode,
-        darkPreset
+        darkPreset,
+        pageTextColor: textColorEnabled ? textColor : '',
+        pageBgColor: bgColorEnabled ? bgColor : ''
       }
       if (removeKey) update.googleApiKey = ''
       else if (apiKey.trim()) update.googleApiKey = apiKey.trim()
@@ -120,6 +126,55 @@ export function SettingsModal({ settings, onClose, onSave }: SettingsModalProps)
           <div className="hint">
             A recolorização atual inverte as cores da página. Imagens também são invertidas —
             uma preservação seletiva de imagens está prevista para uma próxima iteração.
+          </div>
+        </div>
+
+        <div className="field">
+          <label htmlFor="page-text-color">Cor da fonte da página</label>
+          <div className="color-row">
+            <input
+              type="checkbox"
+              checked={textColorEnabled}
+              onChange={(event) => setTextColorEnabled(event.target.checked)}
+            />
+            <input
+              id="page-text-color"
+              type="color"
+              value={textColor}
+              onChange={(event) => {
+                setTextColor(event.target.value)
+                setTextColorEnabled(true)
+              }}
+              disabled={darkMode}
+            />
+          </div>
+          <div className="hint">
+            Recoloriza o texto escuro da página no modo claro. Desmarcado = cor original do PDF.
+          </div>
+        </div>
+
+        <div className="field">
+          <label htmlFor="page-bg-color">Cor de fundo da página</label>
+          <div className="color-row">
+            <input
+              type="checkbox"
+              checked={bgColorEnabled}
+              onChange={(event) => setBgColorEnabled(event.target.checked)}
+            />
+            <input
+              id="page-bg-color"
+              type="color"
+              value={bgColor}
+              onChange={(event) => {
+                setBgColor(event.target.value)
+                setBgColorEnabled(true)
+              }}
+              disabled={darkMode}
+            />
+          </div>
+          <div className="hint">
+            Substitui o fundo branco da página no modo claro. O conteúdo (texto e imagens) é
+            preservado.
           </div>
         </div>
 

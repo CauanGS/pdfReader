@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useRef, useState, type CSSProperties } from 'react'
 import type { PDFDocumentProxy } from 'pdfjs-dist'
 import { pdfjsLib } from '@renderer/lib/pdf'
 import { selectionInfoFromWindow, type TextSelectionInfo } from '@renderer/lib/selection'
@@ -9,6 +9,8 @@ interface PdfPageProps {
   scale: number
   darkMode: boolean
   darkPreset: 'soft' | 'contrast'
+  pageBgColor: string | null
+  pageTextColor: string | null
   translationMode: boolean
   registerRef: (pageNumber: number, element: HTMLDivElement | null) => void
   onTranslateSelection: (info: TextSelectionInfo) => void
@@ -23,6 +25,8 @@ export function PdfPage({
   scale,
   darkMode,
   darkPreset,
+  pageBgColor,
+  pageTextColor,
   translationMode,
   registerRef,
   onTranslateSelection
@@ -150,6 +154,18 @@ export function PdfPage({
   const width = size?.width ?? DEFAULT_WIDTH * scale
   const height = size?.height ?? DEFAULT_HEIGHT * scale
   const darkClass = darkMode ? (darkPreset === 'contrast' ? 'dark-contrast' : 'dark-soft') : ''
+  const customActive = !darkMode && (Boolean(pageBgColor) || Boolean(pageTextColor))
+  const useBg = customActive && Boolean(pageBgColor)
+  const useText = customActive && Boolean(pageTextColor)
+  const pageClass = `pdf-page ${customActive ? 'custom-colors' : darkClass}`
+  const pageStyle: CSSProperties | undefined = customActive
+    ? ({
+        width,
+        height,
+        '--pdf-bg': pageBgColor ?? undefined,
+        '--pdf-text': pageTextColor ?? undefined
+      } as CSSProperties)
+    : { width, height }
 
   return (
     <div
@@ -158,8 +174,8 @@ export function PdfPage({
         registerRef(pageNumber, element)
       }}
       data-page-number={pageNumber}
-      className={`pdf-page ${darkClass}`}
-      style={{ width, height }}
+      className={pageClass}
+      style={pageStyle}
       onMouseUp={handleMouseUp}
     >
       {!size && (
@@ -167,7 +183,8 @@ export function PdfPage({
           Página {pageNumber}
         </div>
       )}
-      <canvas ref={canvasRef} />
+      <canvas ref={canvasRef} className={useBg ? 'blend-multiply' : undefined} />
+      {useText && <div className="text-color-overlay" aria-hidden="true" />}
       <div ref={textLayerRef} className="textLayer" />
     </div>
   )
