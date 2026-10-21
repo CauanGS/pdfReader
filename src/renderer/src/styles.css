@@ -418,34 +418,37 @@ select {
   background: rgba(110, 168, 254, 0.35);
 }
 
-/* ---------- Seta de retomada ---------- */
+/* ---------- Cores personalizadas da página ---------- */
 
-.resume-arrow {
-  position: fixed;
-  left: 14px;
-  transform: translateY(-50%);
-  color: var(--accent);
-  z-index: 40;
+.pdf-page.custom-colors {
+  isolation: isolate;
+  background: var(--pdf-bg, #fff);
+}
+
+.pdf-page.custom-colors canvas.blend-multiply {
+  mix-blend-mode: multiply;
+}
+
+.pdf-page.custom-colors .text-color-overlay {
+  position: absolute;
+  inset: 0;
+  background: var(--pdf-text);
+  mix-blend-mode: lighten;
   pointer-events: none;
-  animation: arrow-pulse 900ms ease-in-out infinite alternate;
-  filter: drop-shadow(0 0 6px rgba(110, 168, 254, 0.6));
+  z-index: 1;
 }
 
-@keyframes arrow-pulse {
-  from {
-    transform: translateY(-50%) translateX(0);
-    opacity: 0.65;
-  }
-  to {
-    transform: translateY(-50%) translateX(6px);
-    opacity: 1;
-  }
+.color-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
 }
 
-@media (prefers-reduced-motion: reduce) {
-  .resume-arrow {
-    animation: none;
-  }
+.field input[type='color'] {
+  width: 64px;
+  height: 36px;
+  padding: 2px;
+  cursor: pointer;
 }
 
 /* ---------- Sidebar de traduções ---------- */
