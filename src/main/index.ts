@@ -1,6 +1,5 @@
 import { app, BrowserWindow, ipcMain, protocol, shell } from 'electron'
 import { createReadStream } from 'node:fs'
-import { writeFile } from 'node:fs/promises'
 import { join } from 'node:path'
 import { Readable } from 'node:stream'
 import type {
@@ -117,109 +116,9 @@ function createWindow(): void {
         console.log(`[renderer] ${sourceId ?? ''}:${lineNumber ?? ''} ${message}`)
       }
     )
-    const docId = process.env.PDFREADER_OPEN
-    const url = docId
-      ? `${process.env.ELECTRON_RENDERER_URL}/?doc=${encodeURIComponent(docId)}`
-      : process.env.ELECTRON_RENDERER_URL
-    mainWindow.loadURL(url)
+    mainWindow.loadURL(process.env.ELECTRON_RENDERER_URL)
   } else {
     mainWindow.loadFile(join(__dirname, '../renderer/index.html'))
-  }
-
-  if (process.env.PDFREADER_SHOT) {
-    const shot = process.env.PDFREADER_SHOT
-    mainWindow.once('ready-to-show', () => mainWindow?.show())
-    void mainWindow.webContents
-      .executeJavaScript(
-        `(async () => {
-          try {
-            const waitFor = async (predicate, timeout) => {
-              const start = Date.now()
-              while (Date.now() - start < timeout) {
-                const value = predicate()
-                if (value) return value
-                await new Promise((resolve) => setTimeout(resolve, 400))
-              }
-              return null
-            }
-            const translateButton = await waitFor(
-              () =>
-                [...document.querySelectorAll('button')]
-                  .filter((b) => b.textContent.trim() === 'Tradução' && !b.disabled)
-                  .at(0) ?? null,
-              20000
-            )
-            if (!translateButton) return 'botão Tradução não encontrado'
-            translateButton.click()
-            await new Promise((resolve) => setTimeout(resolve, 300))
-            if (!translateButton.classList.contains('active')) {
-              translateButton.click()
-              await new Promise((resolve) => setTimeout(resolve, 300))
-            }
-            const words = await waitFor(
-              () =>
-                [...document.querySelectorAll('[data-word-index]')].find(
-                  (w) => w.textContent.trim() === 'file'
-                ) ?? null,
-              20000
-            )
-            if (!words) return 'palavra file não encontrada'
-            const range = document.createRange()
-            range.selectNode(words)
-            const selection = window.getSelection()
-            selection.removeAllRanges()
-            selection.addRange(range)
-            words.closest('.pdf-page').dispatchEvent(new MouseEvent('mouseup', { bubbles: true }))
-            const popover = await waitFor(() => document.querySelector('.translation-popover'), 8000)
-            if (!popover) return 'popover ausente'
-            const popoverText = popover.textContent.trim().slice(0, 200)
-            const saveButton = [...popover.querySelectorAll('button')].find((b) =>
-              b.textContent.includes('Salvar')
-            )
-            if (saveButton) saveButton.click()
-            await new Promise((resolve) => setTimeout(resolve, 1200))
-            const sidebarItem = document.querySelector('.translation-item')
-            const marcadorButton = [...document.querySelectorAll('button')].find((b) =>
-              b.textContent.trim().startsWith('+ Marcador')
-            )
-            marcadorButton?.click()
-            await new Promise((resolve) => setTimeout(resolve, 800))
-            const bookmarkItem = document.querySelector('.bookmark-item')
-            return (
-              'popover: ' +
-              popoverText +
-              ' || sidebar: ' +
-              (sidebarItem ? sidebarItem.textContent.trim().slice(0, 80) : 'vazia') +
-              ' || marcador: ' +
-              (bookmarkItem ? bookmarkItem.textContent.trim().slice(0, 80) : 'vazio')
-            )
-          } catch (error) {
-            return 'ERR ' + error.message
-          }
-        })()`,
-        false
-      )
-      .then((value) => console.log('[traducao-test]', String(value)))
-      .catch((error) => console.log('[traducao-test-erro]', String(error)))
-    const captureWithRetry = async (attempt = 0): Promise<void> => {
-      if (!mainWindow) return
-      try {
-        const image = await mainWindow.webContents.capturePage()
-        await writeFile(shot, image.toPNG())
-        console.log('shot: captura salva em', shot)
-        app.quit()
-      } catch (error) {
-        if (attempt >= 15) {
-          console.error('shot: falhou após retries', error)
-          app.exit(1)
-          return
-        }
-        setTimeout(() => void captureWithRetry(attempt + 1), 800)
-      }
-    }
-    mainWindow.webContents.on('did-finish-load', () => {
-      setTimeout(() => void captureWithRetry(), 26000)
-    })
   }
 }
 
