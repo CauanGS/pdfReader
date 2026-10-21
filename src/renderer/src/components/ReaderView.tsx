@@ -62,8 +62,6 @@ export function ReaderView({
   const [sidebarCollapsed, setSidebarCollapsed] = useState(true)
   const [bookmarksOpen, setBookmarksOpen] = useState(false)
   const [popover, setPopover] = useState<TranslationPopoverState | null>(null)
-  const [arrow, setArrow] = useState<{ page: number; wordIndex: number | null } | null>(null)
-  const [arrowTop, setArrowTop] = useState<number | null>(null)
 
   const scrollRef = useRef<HTMLDivElement | null>(null)
   const pageRefs = useRef(new Map<number, HTMLDivElement>())
@@ -145,9 +143,6 @@ export function ReaderView({
         container.scrollTop = element.offsetTop + offset * element.offsetHeight
         currentPageRef.current = page
         setCurrentPage(page)
-      }
-      if (readingState && readingState.page > 1) {
-        setArrow({ page: readingState.page, wordIndex: null })
       }
     }, 140)
     return () => window.clearTimeout(timer)
@@ -233,34 +228,6 @@ export function ReaderView({
     }, 160)
     return () => window.clearTimeout(timer)
   }, [scale])
-
-  useEffect(() => {
-    if (!arrow) {
-      setArrowTop(null)
-      return
-    }
-    const compute = () => {
-      const pageElement = pageRefs.current.get(arrow.page)
-      if (!pageElement) return
-      const wordElement =
-        arrow.wordIndex != null
-          ? pageElement.querySelector<HTMLElement>(`[data-word-index="${arrow.wordIndex}"]`)
-          : null
-      const rect = (wordElement ?? pageElement).getBoundingClientRect()
-      setArrowTop(rect.top + Math.min(rect.height / 2, 24))
-    }
-    const initialTimer = window.setTimeout(compute, 120)
-    const scrollElement = scrollRef.current
-    scrollElement?.addEventListener('scroll', compute, { passive: true })
-    window.addEventListener('resize', compute)
-    const hideTimer = window.setTimeout(() => setArrow(null), 2400)
-    return () => {
-      window.clearTimeout(initialTimer)
-      window.clearTimeout(hideTimer)
-      scrollElement?.removeEventListener('scroll', compute)
-      window.removeEventListener('resize', compute)
-    }
-  }, [arrow])
 
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
@@ -350,12 +317,10 @@ export function ReaderView({
 
   const handleJumpToBookmark = (bookmark: Bookmark) => {
     scrollToAnchor(bookmark.page, bookmark.wordIndex)
-    setArrow({ page: bookmark.page, wordIndex: bookmark.wordIndex })
   }
 
   const handleJumpToTranslation = (translation: SavedTranslation) => {
     scrollToAnchor(translation.page, translation.wordIndex)
-    setArrow({ page: translation.page, wordIndex: translation.wordIndex })
   }
 
   const handleRemoveBookmark = async (bookmark: Bookmark) => {
@@ -532,20 +497,6 @@ export function ReaderView({
           />
         )}
       </div>
-
-      {arrow && arrowTop != null && (
-        <div className="resume-arrow" style={{ top: arrowTop }} title="Retomando leitura">
-          <svg width="34" height="24" viewBox="0 0 34 24" fill="none" aria-hidden="true">
-            <path
-              d="M2 12h20M22 12l-7-6M22 12l-7 6"
-              stroke="currentColor"
-              strokeWidth="2.4"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            />
-          </svg>
-        </div>
-      )}
 
       {popover && (
         <TranslationPopover
