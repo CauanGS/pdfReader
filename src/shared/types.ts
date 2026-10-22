@@ -43,25 +43,21 @@ export interface SavedTranslation {
 export type TranslationProviderId = 'google' | 'local'
 
 export interface PublicSettings {
-  provider: TranslationProviderId
   sourceLanguage: string
   targetLanguage: string
   darkMode: boolean
   darkPreset: 'soft' | 'contrast'
   pageBgColor: string | null
   pageTextColor: string | null
-  hasGoogleApiKey: boolean
 }
 
 export interface SettingsUpdate {
-  provider?: TranslationProviderId
   sourceLanguage?: string
   targetLanguage?: string
   darkMode?: boolean
   darkPreset?: 'soft' | 'contrast'
   pageBgColor?: string
   pageTextColor?: string
-  googleApiKey?: string
 }
 
 export interface TranslateRequest {

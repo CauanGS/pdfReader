@@ -1,9 +1,7 @@
-import { safeStorage } from 'electron'
-import type { PublicSettings, SettingsUpdate, TranslationProviderId } from '@shared/types'
+import type { PublicSettings, SettingsUpdate } from '@shared/types'
 import { getDb } from './db'
 
 const DEFAULT_SETTINGS = {
-  provider: 'google' as TranslationProviderId,
   sourceLanguage: 'auto',
   targetLanguage: 'pt-BR',
   darkMode: true,
@@ -34,49 +32,19 @@ function readColor(key: string): string | null {
   return value && value.trim() ? value.trim() : null
 }
 
-export function saveGoogleApiKey(apiKey: string): void {
-  if (!apiKey) {
-    deleteSetting('google_api_key_enc')
-    deleteSetting('google_api_key_plain')
-    return
-  }
-  deleteSetting('google_api_key_plain')
-  if (safeStorage.isEncryptionAvailable()) {
-    writeSetting('google_api_key_enc', safeStorage.encryptString(apiKey).toString('base64'))
-  } else {
-    writeSetting('google_api_key_plain', apiKey)
-  }
-}
-
-export function readGoogleApiKey(): string | null {
-  const encrypted = readSetting('google_api_key_enc')
-  if (encrypted) {
-    try {
-      return safeStorage.decryptString(Buffer.from(encrypted, 'base64'))
-    } catch {
-      return null
-    }
-  }
-  return readSetting('google_api_key_plain')
-}
-
 export function getPublicSettings(): PublicSettings {
-  const provider = (readSetting('provider') as TranslationProviderId | null) ?? DEFAULT_SETTINGS.provider
   const darkPreset = (readSetting('dark_preset') as 'soft' | 'contrast' | null) ?? DEFAULT_SETTINGS.darkPreset
   return {
-    provider,
     sourceLanguage: readSetting('source_language') ?? DEFAULT_SETTINGS.sourceLanguage,
     targetLanguage: readSetting('target_language') ?? DEFAULT_SETTINGS.targetLanguage,
     darkMode: (readSetting('dark_mode') ?? String(DEFAULT_SETTINGS.darkMode)) === 'true',
     darkPreset,
     pageBgColor: readColor('page_bg_color'),
-    pageTextColor: readColor('page_text_color'),
-    hasGoogleApiKey: Boolean(readGoogleApiKey())
+    pageTextColor: readColor('page_text_color')
   }
 }
 
 export function updateSettings(update: SettingsUpdate): PublicSettings {
-  if (update.provider) writeSetting('provider', update.provider)
   if (update.sourceLanguage) writeSetting('source_language', update.sourceLanguage)
   if (update.targetLanguage) writeSetting('target_language', update.targetLanguage)
   if (typeof update.darkMode === 'boolean') writeSetting('dark_mode', String(update.darkMode))
@@ -91,6 +59,5 @@ export function updateSettings(update: SettingsUpdate): PublicSettings {
     if (value) writeSetting('page_text_color', value)
     else deleteSetting('page_text_color')
   }
-  if (typeof update.googleApiKey === 'string') saveGoogleApiKey(update.googleApiKey.trim())
   return getPublicSettings()
 }
