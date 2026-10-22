@@ -62,6 +62,7 @@ export function ReaderView({
   const [sidebarCollapsed, setSidebarCollapsed] = useState(true)
   const [bookmarksOpen, setBookmarksOpen] = useState(false)
   const [popover, setPopover] = useState<TranslationPopoverState | null>(null)
+  const [immersive, setImmersive] = useState(false)
 
   const scrollRef = useRef<HTMLDivElement | null>(null)
   const pageRefs = useRef(new Map<number, HTMLDivElement>())
@@ -231,10 +232,27 @@ export function ReaderView({
 
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
-      if (event.key === 'Escape') setPopover(null)
+      if (event.key !== 'Escape') return
+      if (popover) setPopover(null)
+      else if (immersive) setImmersive(false)
     }
     window.addEventListener('keydown', handleKeyDown)
     return () => window.removeEventListener('keydown', handleKeyDown)
+  }, [popover, immersive])
+
+  useEffect(() => {
+    const element = scrollRef.current
+    if (!element) return
+    const handleWheel = (event: WheelEvent) => {
+      if (!event.ctrlKey) return
+      event.preventDefault()
+      const step = event.deltaY < 0 ? SCALE_STEP : -SCALE_STEP
+      setScale((value) =>
+        Math.min(MAX_SCALE, Math.max(MIN_SCALE, Number((value + step).toFixed(2))))
+      )
+    }
+    element.addEventListener('wheel', handleWheel, { passive: false })
+    return () => element.removeEventListener('wheel', handleWheel)
   }, [])
 
   const handleTranslateSelection = useCallback(async (info: TextSelectionInfo) => {
@@ -362,7 +380,7 @@ export function ReaderView({
   }
 
   return (
-    <div className="reader">
+    <div className={`reader ${immersive ? 'immersive' : ''}`}>
       <header className="toolbar">
         <button className="btn ghost" onClick={onBack}>
           ← Biblioteca
@@ -439,6 +457,13 @@ export function ReaderView({
           Marcadores ({bookmarks.length})
         </button>
         <button
+          className={`btn ghost icon ${immersive ? 'active' : ''}`}
+          onClick={() => setImmersive(true)}
+          title="Tela cheia do texto (Esc para sair)"
+        >
+          ⛶
+        </button>
+        <button
           className="btn ghost icon"
           onClick={() => void onUpdateSettings({ darkMode: !settings.darkMode })}
           title={settings.darkMode ? 'Desativar modo escuro' : 'Ativar modo escuro'}
@@ -499,6 +524,21 @@ export function ReaderView({
           />
         )}
       </div>
+
+      {immersive && (
+        <>
+          <button
+            className="btn ghost immersive-exit"
+            onClick={() => setImmersive(false)}
+            title="Sair da tela cheia (Esc)"
+          >
+            ✕ Sair da tela cheia
+          </button>
+          <div className="immersive-hud">
+            {totalPages > 0 ? `${currentPage} / ${totalPages}` : '…'}
+          </div>
+        </>
+      )}
 
       {popover && (
         <TranslationPopover

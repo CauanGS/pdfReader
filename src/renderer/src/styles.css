@@ -451,6 +451,46 @@ select {
   cursor: pointer;
 }
 
+/* ---------- Tela cheia do texto ---------- */
+
+.reader.immersive .toolbar,
+.reader.immersive .sidebar,
+.reader.immersive .bookmarks-panel {
+  display: none;
+}
+
+.reader.immersive .pages {
+  padding: 14px 18px 70px;
+}
+
+.immersive-exit {
+  position: fixed;
+  top: 10px;
+  right: 14px;
+  z-index: 45;
+  opacity: 0.2;
+  transition: opacity 150ms ease;
+}
+
+.immersive-exit:hover,
+.immersive-exit:focus-visible {
+  opacity: 1;
+}
+
+.immersive-hud {
+  position: fixed;
+  bottom: 10px;
+  right: 14px;
+  z-index: 45;
+  font-size: 12px;
+  color: var(--muted);
+  background: rgba(10, 12, 18, 0.72);
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  padding: 4px 12px;
+  pointer-events: none;
+}
+
 /* ---------- Sidebar de traduções ---------- */
 
 .sidebar {

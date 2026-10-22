@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import type { PublicSettings, SettingsUpdate, TranslationProviderId } from '@shared/types'
+import type { PublicSettings, SettingsUpdate } from '@shared/types'
 
 interface SettingsModalProps {
   settings: PublicSettings
@@ -8,7 +8,6 @@ interface SettingsModalProps {
 }
 
 export function SettingsModal({ settings, onClose, onSave }: SettingsModalProps) {
-  const [provider, setProvider] = useState<TranslationProviderId>(settings.provider)
   const [targetLanguage, setTargetLanguage] = useState(settings.targetLanguage)
   const [darkMode, setDarkMode] = useState(settings.darkMode)
   const [darkPreset, setDarkPreset] = useState(settings.darkPreset)
@@ -16,28 +15,35 @@ export function SettingsModal({ settings, onClose, onSave }: SettingsModalProps)
   const [textColor, setTextColor] = useState(settings.pageTextColor ?? '#0c0c0c')
   const [bgColorEnabled, setBgColorEnabled] = useState(settings.pageBgColor != null)
   const [bgColor, setBgColor] = useState(settings.pageBgColor ?? '#ffffff')
-  const [apiKey, setApiKey] = useState('')
-  const [removeKey, setRemoveKey] = useState(false)
   const [saving, setSaving] = useState(false)
 
   const handleSave = async () => {
     setSaving(true)
     try {
       const update: SettingsUpdate = {
-        provider,
         targetLanguage: targetLanguage.trim() || 'pt-BR',
         darkMode,
         darkPreset,
         pageTextColor: textColorEnabled ? textColor : '',
         pageBgColor: bgColorEnabled ? bgColor : ''
       }
-      if (removeKey) update.googleApiKey = ''
-      else if (apiKey.trim()) update.googleApiKey = apiKey.trim()
       await onSave(update)
       onClose()
     } finally {
       setSaving(false)
     }
+  }
+
+  const handleTextColorInteraction = (nextColor: string) => {
+    setTextColor(nextColor)
+    setTextColorEnabled(true)
+    if (darkMode) setDarkMode(false)
+  }
+
+  const handleBgColorInteraction = (nextColor: string) => {
+    setBgColor(nextColor)
+    setBgColorEnabled(true)
+    if (darkMode) setDarkMode(false)
   }
 
   return (
@@ -46,49 +52,11 @@ export function SettingsModal({ settings, onClose, onSave }: SettingsModalProps)
         <h2>Configurações</h2>
 
         <div className="field">
-          <label htmlFor="provider">Provider de tradução</label>
-          <select
-            id="provider"
-            value={provider}
-            onChange={(event) => setProvider(event.target.value as TranslationProviderId)}
-          >
-            <option value="google">Google Cloud Translation v2 (recomendado)</option>
-            <option value="local">Dicionário local EN→PT (offline, palavras únicas)</option>
-          </select>
+          <label htmlFor="api-key">Tradução</label>
           <div className="hint">
-            O Dicionário local funciona sem internet e sem chave, cobrindo palavras únicas
-            (EN→PT, base WikDict — CC BY-SA 4.0). Frases exigem um Provider online.
+            Dicionário local EN→PT (offline, palavras únicas) — base WikDict, CC BY-SA 4.0.
+            Não é necessária nenhuma chave nem conexão com a internet.
           </div>
-        </div>
-
-        <div className="field">
-          <label htmlFor="api-key">Chave da API do Google Cloud Translation</label>
-          <input
-            id="api-key"
-            type="password"
-            value={apiKey}
-            placeholder={settings.hasGoogleApiKey ? 'Chave configurada — digite para substituir' : 'Cole sua API key'}
-            onChange={(event) => {
-              setApiKey(event.target.value)
-              setRemoveKey(false)
-            }}
-            disabled={removeKey}
-          />
-          {settings.hasGoogleApiKey && (
-            <div className="settings-status ok">
-              Chave armazenada com segurança pelo sistema.
-            </div>
-          )}
-          {settings.hasGoogleApiKey && (
-            <label className="hint">
-              <input
-                type="checkbox"
-                checked={removeKey}
-                onChange={(event) => setRemoveKey(event.target.checked)}
-              />{' '}
-              Remover a chave salva
-            </label>
-          )}
         </div>
 
         <div className="field">
@@ -131,21 +99,25 @@ export function SettingsModal({ settings, onClose, onSave }: SettingsModalProps)
 
         <div className="field">
           <label htmlFor="page-text-color">Cor da fonte da página</label>
+          {darkMode && (
+            <div className="settings-status warning">
+              Clique numa cor para desligar o Modo escuro automaticamente.
+            </div>
+          )}
           <div className="color-row">
             <input
               type="checkbox"
               checked={textColorEnabled}
-              onChange={(event) => setTextColorEnabled(event.target.checked)}
+              onChange={(event) => {
+                setTextColorEnabled(event.target.checked)
+                if (event.target.checked && darkMode) setDarkMode(false)
+              }}
             />
             <input
               id="page-text-color"
               type="color"
               value={textColor}
-              onChange={(event) => {
-                setTextColor(event.target.value)
-                setTextColorEnabled(true)
-              }}
-              disabled={darkMode}
+              onChange={(event) => handleTextColorInteraction(event.target.value)}
             />
           </div>
           <div className="hint">
@@ -159,17 +131,16 @@ export function SettingsModal({ settings, onClose, onSave }: SettingsModalProps)
             <input
               type="checkbox"
               checked={bgColorEnabled}
-              onChange={(event) => setBgColorEnabled(event.target.checked)}
+              onChange={(event) => {
+                setBgColorEnabled(event.target.checked)
+                if (event.target.checked && darkMode) setDarkMode(false)
+              }}
             />
             <input
               id="page-bg-color"
               type="color"
               value={bgColor}
-              onChange={(event) => {
-                setBgColor(event.target.value)
-                setBgColorEnabled(true)
-              }}
-              disabled={darkMode}
+              onChange={(event) => handleBgColorInteraction(event.target.value)}
             />
           </div>
           <div className="hint">
